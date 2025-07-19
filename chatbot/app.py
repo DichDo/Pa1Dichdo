@@ -5,7 +5,9 @@ from flask import Flask, request
 from openai_response import generate_openai_reply
 from memory import get_user_memory, save_user_memory, get_latest_name
 from utils import extract_name_from_message, simulate_typing_delay
+from scheduler import schedule_campaigns
 import os
+import threading
 
 app = Flask(__name__)
 VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")
@@ -45,4 +47,8 @@ def webhook():
         return "OK", 200
 
 if __name__ == "__main__":
+    # Start the scheduler in a separate thread
+    scheduler_thread = threading.Thread(target=schedule_campaigns)
+    scheduler_thread.start()
+
     app.run(debug=True, port=5000)
