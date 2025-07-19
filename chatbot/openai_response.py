@@ -1,13 +1,19 @@
 import openai
 import os
+from config import Config
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
+config = Config()
+openai.api_key = config.OPENAI_API_KEY
 
 def generate_openai_reply(user_msg, memory_rows, name):
     memory_block = "\n".join([
         f"{'User (' + (n or name) + ')' if n else 'User'}: {m}\nBot: {r}"
         for n, m, r in memory_rows
     ])
+
+    # Check if the user is asking for a portfolio
+    if "portfolio" in user_msg.lower() or "work" in user_msg.lower() or "gallery" in user_msg.lower():
+        return f"Of course! You can view my portfolio here: {config.PORTFOLIO_LINK}"
 
     prompt = f"""
 You are Vairi, a warm, creative AI assistant speaking on behalf of a portrait artist.
