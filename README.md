@@ -1,43 +1,64 @@
-# Dichdo
+# Facebook Messenger Bot
 
-**Dichdo** is an advanced AI-powered golem, designed as a creative assistant, collaborator, and virtual artist. Inspired by the deep skills of a seasoned Iranian muralist and oil painter with over 18 years of experience, Dichdo merges technology with artistic expression.
+This project is a Python-based Facebook Messenger bot that uses the Meta Graph API to send and receive messages. It's built with Flask and uses `python-dotenv` for managing credentials.
 
-## 🌟 Features (Basic Version)
+## Features
 
-- Conversational AI – can chat and respond naturally  
-- Art Describer – understands and describes artworks  
-- Memory – remembers user inputs across sessions  
-- Idea Generator – helps brainstorm creative concepts  
+-   **Modular Structure:** Clean and organized codebase.
+-   **Secure Configuration:** Uses a `.env` file to keep your credentials safe.
+-   **Message Handling:** Basic message handler to process incoming messages.
+-   **Easy to Extend:** Add new handlers and features with ease.
 
-## 🎯 Vision
+## Setup
 
-Dichdo begins as a simple conversational artist AI. But this is just the start — she will evolve into:
+1.  **Clone the repository:**
 
-- A real-time art assistant  
-- A speaker and educator  
-- A mural design collaborator  
-- A virtual gallery guide  
+    ```bash
+    git clone https://github.com/your-username/fb-messenger-bot.git
+    cd fb-messenger-bot
+    ```
 
-## 🛠️ Built With
+2.  **Install dependencies:**
 
-- [LangChain](https://www.langchain.com/)
-- [OpenAI API](https://platform.openai.com/)
-- [Google Colab](https://colab.research.google.com/)
-- [GitHub](https://github.com/)
-- Optional: [Make.com](https://make.com/), [Vercel](https://vercel.com/), or [Hugging Face Spaces](https://huggingface.co/spaces)
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-## 📁 Getting Started
+3.  **Configure your credentials:**
 
-To try the basic version of Dichdo:
+    -   Create a `.env` file in the root of the project.
+    -   Add your `PAGE_ACCESS_TOKEN` and `VERIFY_TOKEN` to the `.env` file:
 
-👉 [Run it on Google Colab](https://colab.research.google.com/drive/1Q8A9UyFJ-58lbGg5CXY45A6QREUNnBQC?usp=sharing)
+    ```
+    PAGE_ACCESS_TOKEN="YOUR_PAGE_ACCESS_TOKEN"
+    VERIFY_TOKEN="YOUR_VERIFY_TOKEN"
+    ```
 
-No installation required — everything runs in your browser.
+4.  **Run the application:**
 
-## 📜 License
+    ```bash
+    python main.py
+    ```
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## How to Use
 
----
+1.  **Set up a Facebook Page and a Meta Developer App.**
+2.  **Get your Page Access Token and set up the webhook in the Meta Developer Dashboard.**
+3.  **Use a tool like ngrok to expose your local server to the internet.**
+4.  **Configure the webhook URL in the Meta Developer Dashboard to point to your ngrok URL.**
 
-> Created by Nelson Ugochukwu – blending code, soul, and art to give birth to Dichdo.
+## Project Structure
+
+```
+.
+├── .env
+├── fb_messenger_bot
+│   ├── api.py
+│   ├── config.py
+│   ├── handlers
+│   │   └── message_handler.py
+│   └── __init__.py
+├── main.py
+├── README.md
+└── requirements.txt
+```
