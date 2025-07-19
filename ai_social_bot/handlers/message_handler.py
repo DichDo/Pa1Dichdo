@@ -9,6 +9,11 @@ Processes incoming messages, generates responses, and performs sentiment analysi
 import openai
 from config import Config
 from utils.meta_api_client import MetaApiClient
+from utils.security_filter import is_spam
+from handlers.persona_handler import get_persona
+from handlers.emotion_responder import respond_with_emotion
+from memory.user_memory import store_message, retrieve_memory
+from utils.language_router import route_by_language
 
 class MessageHandler:
     """
@@ -25,47 +30,28 @@ class MessageHandler:
         """
         messages = self.meta_api_client.get_messages()
         for message in messages:
+            sender_id = message["id"]
             # This is a simplified example. In a real application, you would
             # need to parse the message content and handle different message types.
-            sender_id = message["id"]
             message_text = "This is a test message."
 
-            # 1. Analyze sentiment
-            sentiment = self._analyze_sentiment(message_text)
-            print(f"Sentiment: {sentiment}")
+            # 1. Security check
+            if is_spam(message_text):
+                print(f"Spam detected from {sender_id}. Ignoring.")
+                continue
 
-            # 2. Generate response
-            response_text = self._generate_response(message_text)
+            # 2. Store message in memory
+            store_message(sender_id, message_text)
 
-            # 3. Send response
-            self.meta_api_client.send_message(sender_id, response_text)
+            # 3. Route by language
+            route_by_language(sender_id, message_text)
 
-    def _analyze_sentiment(self, text: str) -> str:
+    def handle_message(self, sender_id: str, message_text: str):
         """
-        Analyzes the sentiment of a text using the OpenAI API.
+        Handles a message after it has been routed by language.
         """
-        try:
-            response = openai.Completion.create(
-                engine="text-davinci-003",
-                prompt=f"Sentiment of the following text: '{text}'",
-                max_tokens=10
-            )
-            return response.choices[0].text.strip()
-        except Exception as e:
-            print(f"Error analyzing sentiment: {e}")
-            return "neutral"
+        # 1. Get persona
+        persona = get_persona("oracle")
 
-    def _generate_response(self, text: str) -> str:
-        """
-        Generates a response to a text using the OpenAI API.
-        """
-        try:
-            response = openai.Completion.create(
-                engine="text-davinci-003",
-                prompt=f"The user said: '{text}'. Respond in a friendly and helpful manner.",
-                max_tokens=150
-            )
-            return response.choices[0].text.strip()
-        except Exception as e:
-            print(f"Error generating response: {e}")
-            return "I'm sorry, I'm having trouble understanding you."
+        # 2. Respond with emotion
+        respond_with_emotion(sender_id, message_text)

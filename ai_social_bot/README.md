@@ -12,6 +12,7 @@ This project is a Python-based AI social media bot that connects to Meta's Graph
 -   **Behavior Analysis:** Tracks client engagement and other metrics.
 -   **Web UI Dashboard:** A simple Flask-based dashboard to monitor logs, stats, and the message queue.
 -   **Scheduled Jobs:** Uses `schedule` to run tasks periodically.
+-   **Advanced Features:** Includes a wide range of advanced features, such as a persona handler, emotion responder, security filter, and more.
 
 ## Setup
 
@@ -31,12 +32,7 @@ This project is a Python-based AI social media bot that connects to Meta's Graph
 3.  **Configure your credentials:**
 
     -   Create a `.env` file in the `ai_social_bot` directory.
-    -   Add your `META_PAGE_ACCESS_TOKEN` and `OPENAI_API_KEY` to the `.env` file:
-
-    ```
-    META_PAGE_ACCESS_TOKEN="YOUR_META_PAGE_ACCESS_TOKEN"
-    OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
-    ```
+    -   Add your `PAGE_ACCESS_TOKEN`, `VERIFY_TOKEN`, `GRAPH_API_BASE`, and `OPENAI_API_KEY` to the `.env` file.
 
 4.  **Run the application:**
 
@@ -44,32 +40,30 @@ This project is a Python-based AI social media bot that connects to Meta's Graph
     python main.py
     ```
 
-## How to Use
-
-1.  **Set up a Facebook Page and a Meta Developer App.**
-2.  **Get your Page Access Token and set up the webhook in the Meta Developer Dashboard.**
-3.  **Use a tool like ngrok to expose your local server to the internet.**
-4.  **Configure the webhook URL in the Meta Developer Dashboard to point to your ngrok URL.**
-
 ## Project Structure
 
 ```
 .
 ├── .env
-├── app.py
 ├── config.py
+├── growth
+│   ├── lead_scanner.py
+│   └── spiritual_uplifter.py
 ├── handlers
-│   ├── behavior_analyzer.py
-│   ├── growth_automator.py
-│   └── message_handler.py
+│   ├── emotion_responder.py
+│   ├── message_handler.py
+│   ├── persona_handler.py
+│   └── welcome_greeter.py
 ├── main.py
+├── memory
+│   └── user_memory.py
 ├── models
+│   └── engagement_forecaster.py
 ├── README.md
 ├── requirements.txt
-├── static
-│   └── style.css
-├── templates
-│   └── dashboard.html
 └── utils
-    └── meta_api_client.py
+    ├── language_router.py
+    ├── meta_api_client.py
+    ├── post_composer.py
+    └── security_filter.py
 ```

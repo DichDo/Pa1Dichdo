@@ -1,0 +1,10 @@
+requests
+python-dotenv
+flask
+openai
+langdetect
+pandas
+scikit-learn
+schedule
+textblob
+chromadb

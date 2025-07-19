@@ -15,5 +15,7 @@ class Config:
     """
     def __init__(self):
         load_dotenv()
-        self.meta_page_access_token = os.getenv("META_PAGE_ACCESS_TOKEN")
+        self.page_access_token = os.getenv("PAGE_ACCESS_TOKEN")
+        self.verify_token = os.getenv("VERIFY_TOKEN")
+        self.graph_api_base = os.getenv("GRAPH_API_BASE", "https://graph.facebook.com/v18.0")
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
