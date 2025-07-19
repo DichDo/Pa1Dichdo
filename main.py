@@ -2,46 +2,46 @@
 # /main.py
 
 """
-Main Application: The heart of our creation, where all streams converge.
-This script is the nexus, the central pillar of our temple.
-To run, one must simply invoke `python main.py`.
+Main Application: The entry point of the AI social media manager.
+This script launches the FastAPI application and handles webhooks.
 """
 
-from flask import Flask, request, abort
-from fb_messenger_bot.config import VERIFY_TOKEN
-from fb_messenger_bot.handlers.message_handler import handle_message
+from fastapi import FastAPI, Request, HTTPException
+from dotenv import load_dotenv
+import os
+import json
+from handlers.message_handler import handle_facebook_message
 
-# The Flask app, a vessel for our digital spirit.
-app = Flask(__name__)
+load_dotenv()
 
-@app.route("/webhook", methods=["GET"])
-def webhook_verification():
-    """
-    Verifies the webhook with the ancient rites of Meta.
-    """
-    if request.args.get("hub.mode") == "subscribe" and request.args.get("hub.challenge"):
-        if not request.args.get("hub.verify_token") == VERIFY_TOKEN:
-            return "Verification token mismatch", 403
-        return request.args["hub.challenge"], 200
-    return "Hello, world of light and shadow.", 200
+app = FastAPI()
 
-@app.route("/webhook", methods=["POST"])
-def webhook_handler():
-    """
-    The grand hall where all messages are received and processed.
-    """
-    data = request.get_json()
+VERIFY_TOKEN = os.getenv("META_VERIFY_TOKEN")
 
-    if data["object"] == "page":
+@app.get("/webhook")
+async def verify(request: Request):
+    """
+    Verifies the webhook with Meta.
+    """
+    mode = request.query_params.get("hub.mode")
+    token = request.query_params.get("hub.verify_token")
+    challenge = request.query_params.get("hub.challenge")
+
+    if mode == "subscribe" and token == VERIFY_TOKEN:
+        return challenge
+    raise HTTPException(status_code=403, detail="Invalid token")
+
+@app.post("/webhook")
+async def webhook(request: Request):
+    """
+    Handles incoming webhook events from Meta.
+    """
+    body = await request.body()
+    data = json.loads(body)
+
+    if data.get("object") == "page":
         for entry in data["entry"]:
-            for messaging_event in entry["messaging"]:
-                if messaging_event.get("message"):
-                    sender_id = messaging_event["sender"]["id"]
-                    message = messaging_event["message"]
-                    handle_message(sender_id, message)
+            for msg_event in entry.get("messaging", []):
+                await handle_facebook_message(msg_event)
 
-    return "ok", 200
-
-if __name__ == "__main__":
-    # The eternal flame is lit. The server listens.
-    app.run(port=5000, debug=True)
+    return {"status": "ok"}

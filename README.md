@@ -1,12 +1,12 @@
-# Facebook Messenger Bot
+# AI Social Media Manager
 
-This project is a Python-based Facebook Messenger bot that uses the Meta Graph API to send and receive messages. It's built with Flask and uses `python-dotenv` for managing credentials.
+This project is a Python-based AI social media manager that connects to Meta's Graph API to send and receive messages. It's built with FastAPI and uses `python-dotenv` for managing credentials.
 
 ## Features
 
 -   **Modular Structure:** Clean and organized codebase.
 -   **Secure Configuration:** Uses a `.env` file to keep your credentials safe.
--   **Message Handling:** Basic message handler to process incoming messages.
+-   **AI-Powered Responses:** Integrates with OpenAI to generate human-like responses.
 -   **Easy to Extend:** Add new handlers and features with ease.
 
 ## Setup
@@ -14,8 +14,8 @@ This project is a Python-based Facebook Messenger bot that uses the Meta Graph A
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/your-username/fb-messenger-bot.git
-    cd fb-messenger-bot
+    git clone https://github.com/your-username/ai-social-media-manager.git
+    cd ai-social-media-manager
     ```
 
 2.  **Install dependencies:**
@@ -27,17 +27,18 @@ This project is a Python-based Facebook Messenger bot that uses the Meta Graph A
 3.  **Configure your credentials:**
 
     -   Create a `.env` file in the root of the project.
-    -   Add your `PAGE_ACCESS_TOKEN` and `VERIFY_TOKEN` to the `.env` file:
+    -   Add your `META_PAGE_ACCESS_TOKEN`, `META_VERIFY_TOKEN`, and `OPENAI_API_KEY` to the `.env` file:
 
     ```
-    PAGE_ACCESS_TOKEN="YOUR_PAGE_ACCESS_TOKEN"
-    VERIFY_TOKEN="YOUR_VERIFY_TOKEN"
+    META_PAGE_ACCESS_TOKEN="YOUR_META_PAGE_ACCESS_TOKEN"
+    META_VERIFY_TOKEN="YOUR_META_VERIFY_TOKEN"
+    OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
     ```
 
 4.  **Run the application:**
 
     ```bash
-    python main.py
+    uvicorn main:app --reload
     ```
 
 ## How to Use
@@ -52,13 +53,12 @@ This project is a Python-based Facebook Messenger bot that uses the Meta Graph A
 ```
 .
 ├── .env
-├── fb_messenger_bot
-│   ├── api.py
-│   ├── config.py
-│   ├── handlers
-│   │   └── message_handler.py
-│   └── __init__.py
+├── handlers
+│   └── message_handler.py
 ├── main.py
+├── models
 ├── README.md
-└── requirements.txt
+├── requirements.txt
+└── utils
+    └── meta_api_client.py
 ```
