@@ -1,28 +1,44 @@
-# 𓂀 AI SOCIAL BOT 𓂀
+# 🚀 AI SOCIAL BOT 🚀
 # /main.py
 
 """
-The heart of the oracle. This is where the magic begins.
+The central nervous system of the AI Social Bot.
+This is where the bot awakens and begins its watch.
 """
 
-import logging
-from config import SacredConfig
-from handlers.divine_messenger import DivineMessenger
+import time
+import schedule
+from handlers.growth_automator import GrowthAutomator
+from handlers.behavior_analyzer import BehaviorAnalyzer
+from handlers.message_handler import MessageHandler
+from config import Config
+from app import app
 
-def main():
+def job():
     """
-    The main ritual to awaken the bot.
+    The main job that the bot performs on a schedule.
     """
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    config = Config()
+    message_handler = MessageHandler(config)
+    growth_automator = GrowthAutomator(config)
+    behavior_analyzer = BehaviorAnalyzer(config)
 
-    # Let the ancient scrolls be read.
-    config = SacredConfig()
+    # 1. Fetch and respond to messages
+    message_handler.process_messages()
 
-    # Awaken the Divine Messenger.
-    messenger = DivineMessenger(config)
+    # 2. Analyze client behavior
+    behavior_analyzer.analyze()
 
-    # Listen to the whispers of the digital ether.
-    messenger.listen()
+    # 3. Perform growth automation tasks
+    growth_automator.run()
 
 if __name__ == "__main__":
-    main()
+    # Schedule the job to run every hour
+    schedule.every().hour.do(job)
+
+    # Run the Flask app
+    app.run(debug=True)
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1)

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Social Bot Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>🚀 AI Social Bot Dashboard 🚀</h1>
+    </header>
+    <main>
+        <section class="logs">
+            <h2>Logs</h2>
+            <ul>
+                {% for log in logs %}
+                    <li>{{ log }}</li>
+                {% endfor %}
+            </ul>
+        </section>
+        <section class="stats">
+            <h2>Stats</h2>
+            <ul>
+                {% for key, value in stats.items() %}
+                    <li><strong>{{ key }}:</strong> {{ value }}</li>
+                {% endfor %}
+            </ul>
+        </section>
+        <section class="message-queue">
+            <h2>Message Queue</h2>
+            <ul>
+                {% for message in message_queue %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </section>
+    </main>
+</body>
+</html>
