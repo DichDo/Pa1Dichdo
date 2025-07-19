@@ -34,10 +34,10 @@ class MessageHandler:
                             else:
                                 user_data = get_user(sender_id)
                                 name = extract_name(message_text) or (user_data["name"] if user_data else "User")
-                                tags = tag_user(message_text)
+                                tags, is_lead = tag_user(message_text)
                                 ai_reply = self.generate_openai_reply(message_text, user_data)
                                 self.send_facebook_reply(sender_id, ai_reply)
-                                update_user(sender_id, name, message_text, tags)
+                                update_user(sender_id, name, message_text, tags, is_lead)
                                 self.log_conversation(sender_id, message_text, ai_reply)
 
     def generate_openai_reply(self, message, user_data):
@@ -93,9 +93,7 @@ class MessageHandler:
         except Exception as e:
             print(f"⚠️ Facebook reply error: {e}")
 
+from ai_social_bot.database import log_conversation as log_db
+
     def log_conversation(self, user_id, user_msg, bot_reply):
-        if not os.path.exists("logs"):
-            os.makedirs("logs")
-        with open("logs/conversations.csv", mode='a', newline='', encoding='utf-8') as file:
-            writer = csv.writer(file)
-            writer.writerow([datetime.now(), user_id, user_msg, bot_reply])
+        log_db(user_id, user_msg, bot_reply)
