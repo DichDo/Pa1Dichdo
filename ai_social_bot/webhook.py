@@ -14,6 +14,7 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify
 from dotenv import load_dotenv
 import openai
+from database import init_db, get_user, update_user
 
 load_dotenv()
 webhook_blueprint = Blueprint('webhook', __name__)
@@ -23,6 +24,9 @@ PAGE_ACCESS_TOKEN = os.getenv("PAGE_ACCESS_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 openai.api_key = OPENAI_API_KEY
+
+# Initialize the database
+init_db()
 
 
 @webhook_blueprint.route('/webhook', methods=['GET'])
@@ -46,14 +50,24 @@ def handle_webhook():
 
                     if message_text:
                         print(f"🧠 Message received: {message_text}")
-                        ai_reply = generate_openai_reply(message_text)
+                        user_data = get_user(sender_id)
+                        ai_reply = generate_openai_reply(message_text, user_data)
                         send_facebook_reply(sender_id, ai_reply)
+                        # In a real application, you would fetch the user's name
+                        # from the Graph API.
+                        update_user(sender_id, "User", message_text, "")
                         log_conversation(sender_id, message_text, ai_reply)
 
     return "EVENT_RECEIVED", 200
 
 
-def generate_openai_reply(message):
+def generate_openai_reply(message, user_data):
+    # This is a simplified example. In a real application, you would want to
+    # build a more sophisticated prompt based on the user's data.
+    prompt = f"The user said: '{message}'"
+    if user_data:
+        prompt = f"The user, {user_data['name']}, said: '{message}'"
+
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
@@ -68,7 +82,7 @@ def generate_openai_reply(message):
                 },
                 {
                     "role": "user",
-                    "content": message
+                    "content": prompt
                 }
             ]
         )
