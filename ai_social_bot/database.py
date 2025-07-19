@@ -7,6 +7,9 @@ Handles all interactions with the SQLite database.
 """
 
 import sqlite3
+import json
+import csv
+import re
 
 DB_FILE = "memory.db"
 
@@ -52,3 +55,49 @@ def update_user(user_id, name, last_message, tags):
     """, (user_id, name, last_message, tags))
     conn.commit()
     conn.close()
+
+def extract_name(message):
+    """
+    Extracts a name from a message using regex.
+    """
+    match = re.search(r"my name is (\w+)", message, re.IGNORECASE)
+    if match:
+        return match.group(1)
+    return None
+
+def tag_user(message):
+    """
+    Tags a user based on keywords in their message.
+    """
+    tags = []
+    if "price" in message.lower() or "commission" in message.lower():
+        tags.append("lead")
+    if "love your work" in message.lower() or "amazing" in message.lower():
+        tags.append("fan")
+    return ",".join(tags)
+
+def export_to_json():
+    """
+    Exports the user memory to a JSON file.
+    """
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM user_memory")
+    rows = cursor.fetchall()
+    conn.close()
+    with open("user_memory.json", "w") as f:
+        json.dump([dict(zip([c[0] for c in cursor.description], row)) for row in rows], f, indent=4)
+
+def export_to_csv():
+    """
+    Exports the user memory to a CSV file.
+    """
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM user_memory")
+    rows = cursor.fetchall()
+    conn.close()
+    with open("user_memory.csv", "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([c[0] for c in cursor.description])
+        writer.writerows(rows)

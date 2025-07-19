@@ -14,7 +14,8 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify
 from dotenv import load_dotenv
 import openai
-from database import init_db, get_user, update_user
+from database import init_db, get_user, update_user, tag_user
+from utils.name_utils import extract_name
 
 load_dotenv()
 webhook_blueprint = Blueprint('webhook', __name__)
@@ -51,11 +52,11 @@ def handle_webhook():
                     if message_text:
                         print(f"🧠 Message received: {message_text}")
                         user_data = get_user(sender_id)
+                        name = extract_name(message_text) or (user_data["name"] if user_data else "User")
+                        tags = tag_user(message_text)
                         ai_reply = generate_openai_reply(message_text, user_data)
                         send_facebook_reply(sender_id, ai_reply)
-                        # In a real application, you would fetch the user's name
-                        # from the Graph API.
-                        update_user(sender_id, "User", message_text, "")
+                        update_user(sender_id, name, message_text, tags)
                         log_conversation(sender_id, message_text, ai_reply)
 
     return "EVENT_RECEIVED", 200
@@ -67,6 +68,9 @@ def generate_openai_reply(message, user_data):
     prompt = f"The user said: '{message}'"
     if user_data:
         prompt = f"The user, {user_data['name']}, said: '{message}'"
+        if user_data['tags']:
+            prompt += f" (tags: {user_data['tags']})"
+
 
     try:
         response = openai.ChatCompletion.create(
