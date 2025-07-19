@@ -4,7 +4,7 @@
 from flask import Flask, request
 from openai_response import generate_openai_reply
 from memory import get_user_memory, save_user_memory, get_latest_name
-from utils import extract_name_from_message, simulate_typing_delay
+from utils import extract_name_from_message, simulate_typing_delay, send_facebook_reply
 from scheduler import schedule_campaigns
 import os
 import threading
@@ -21,28 +21,39 @@ def webhook():
 
     if request.method == "POST":
         data = request.get_json()
+        if not data:
+            return "Error: Invalid JSON", 400
+
         for entry in data.get("entry", []):
             for msg_event in entry.get("messaging", []):
-                sender_id = msg_event["sender"]["id"]
+                sender_id = msg_event.get("sender", {}).get("id")
+                if not sender_id:
+                    continue
+
                 if "message" in msg_event:
                     user_message = msg_event["message"].get("text", "")
 
-                    # Detect name if possible
-                    name = extract_name_from_message(user_message)
-                    memory = get_user_memory(sender_id)
-                    known_name = name or get_latest_name(sender_id)
+                    try:
+                        # Detect name if possible
+                        name = extract_name_from_message(user_message)
+                        memory = get_user_memory(sender_id)
+                        known_name = name or get_latest_name(sender_id)
 
-                    # Typing simulation
-                    simulate_typing_delay(user_message)
+                        # Typing simulation
+                        simulate_typing_delay(user_message)
 
-                    # Generate reply
-                    reply = generate_openai_reply(user_message, memory, known_name)
+                        # Generate reply
+                        reply = generate_openai_reply(user_message, memory, known_name)
 
-                    # Save
-                    save_user_memory(sender_id, user_message, reply, name)
+                        # Save
+                        save_user_memory(sender_id, user_message, reply, name)
 
-                    # (Optional) Send reply via Messenger API here
-                    print(f"Reply to {sender_id}: {reply}")
+                        # Send reply
+                        send_facebook_reply(sender_id, reply)
+                    except Exception as e:
+                        print(f"Error handling message: {e}")
+                        send_facebook_reply(sender_id, "I'm sorry, I encountered an error. Please try again later.")
+
 
         return "OK", 200
 
