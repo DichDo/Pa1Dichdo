@@ -1,57 +1,101 @@
-# 🚀 AI SOCIAL BOT 🚀
-# /handlers/message_handler.py
-
-"""
-Message Handler for the AI Social Bot.
-Processes incoming messages, generates responses, and performs sentiment analysis.
-"""
-
+import os
+import time
+import requests
+import csv
 import openai
-from config import Config
-from utils.meta_api_client import MetaApiClient
-from utils.security_filter import is_spam
-from handlers.persona_handler import get_persona
-from handlers.emotion_responder import respond_with_emotion
-from memory.user_memory import store_message, retrieve_memory
-from utils.language_router import route_by_language
+from datetime import datetime
+from ai_social_bot.config import Config
+from ai_social_bot.utils.meta_api_client import MetaApiClient
+from ai_social_bot.database import get_user, update_user, tag_user
+from ai_social_bot.utils.name_utils import extract_name
+from ai_social_bot.handlers.portfolio_handler import PortfolioHandler
 
 class MessageHandler:
-    """
-    A handler for processing incoming messages.
-    """
     def __init__(self, config: Config):
         self.config = config
         self.meta_api_client = MetaApiClient(config)
+        self.portfolio_handler = PortfolioHandler(self.meta_api_client)
         openai.api_key = self.config.openai_api_key
 
-    def process_messages(self):
-        """
-        Fetches and processes new messages.
-        """
-        messages = self.meta_api_client.get_messages()
-        for message in messages:
-            sender_id = message["id"]
-            # This is a simplified example. In a real application, you would
-            # need to parse the message content and handle different message types.
-            message_text = "This is a test message."
+    def handle_webhook_data(self, data):
+        print("📩 Incoming webhook event:", data)
+        if data.get("object") == "page":
+            for entry in data.get("entry", []):
+                for messaging_event in entry.get("messaging", []):
+                    if "message" in messaging_event:
+                        sender_id = messaging_event["sender"]["id"]
+                        message_text = messaging_event["message"].get("text")
 
-            # 1. Security check
-            if is_spam(message_text):
-                print(f"Spam detected from {sender_id}. Ignoring.")
-                continue
+                        if message_text:
+                            print(f"🧠 Message received: {message_text}")
 
-            # 2. Store message in memory
-            store_message(sender_id, message_text)
+                            if "portfolio" in message_text.lower() or "work" in message_text.lower():
+                                self.portfolio_handler.send_portfolio(sender_id)
+                            else:
+                                user_data = get_user(sender_id)
+                                name = extract_name(message_text) or (user_data["name"] if user_data else "User")
+                                tags = tag_user(message_text)
+                                ai_reply = self.generate_openai_reply(message_text, user_data)
+                                self.send_facebook_reply(sender_id, ai_reply)
+                                update_user(sender_id, name, message_text, tags)
+                                self.log_conversation(sender_id, message_text, ai_reply)
 
-            # 3. Route by language
-            route_by_language(sender_id, message_text)
+    def generate_openai_reply(self, message, user_data):
+        prompt = f"The user said: '{message}'"
+        if user_data:
+            prompt = f"The user, {user_data['name']}, said: '{message}'"
+            if user_data.get('tags'):
+                prompt += f" (tags: {user_data['tags']})"
 
-    def handle_message(self, sender_id: str, message_text: str):
-        """
-        Handles a message after it has been routed by language.
-        """
-        # 1. Get persona
-        persona = get_persona("oracle")
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are a warm, imaginative, creative portrait artist. "
+                            "You speak like an inspired painter who understands beauty and feeling. "
+                            "You are replying to fans and clients with kindness, wisdom, and charm."
+                        )
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ]
+            )
+            return response['choices'][0]['message']['content'].strip()
+        except Exception as e:
+            print(f"⚠️ OpenAI error: {e}")
+            return "Sorry, I'm having trouble right now."
 
-        # 2. Respond with emotion
-        respond_with_emotion(sender_id, message_text)
+    def send_facebook_reply(self, recipient_id, message):
+        url = f"https://graph.facebook.com/v18.0/me/messages?access_token={self.config.meta_page_access_token}"
+        headers = {"Content-Type": "application/json"}
+
+        typing_payload = {
+            "recipient": {"id": recipient_id},
+            "sender_action": "typing_on"
+        }
+        requests.post(url, json=typing_payload, headers=headers)
+
+        time.sleep(2 + len(message) * 0.01)
+
+        message_payload = {
+            "recipient": {"id": recipient_id},
+            "message": {"text": message}
+        }
+        try:
+            response = requests.post(url, json=message_payload, headers=headers)
+            response.raise_for_status()
+            print(f"✅ Message sent: {message}")
+        except Exception as e:
+            print(f"⚠️ Facebook reply error: {e}")
+
+    def log_conversation(self, user_id, user_msg, bot_reply):
+        if not os.path.exists("logs"):
+            os.makedirs("logs")
+        with open("logs/conversations.csv", mode='a', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow([datetime.now(), user_id, user_msg, bot_reply])

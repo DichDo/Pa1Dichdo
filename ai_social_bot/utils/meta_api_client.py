@@ -8,7 +8,7 @@ Handles all communications with the Meta Graph API.
 
 import time
 import requests
-from config import Config
+from ai_social_bot.config import Config
 
 class MetaApiClient:
     """
@@ -27,6 +27,19 @@ class MetaApiClient:
         payload = {
             "recipient": {"id": recipient_id},
             "message": {"text": message}
+        }
+
+        self._make_request("POST", url, params=params, json=payload)
+
+    def send_attachment(self, recipient_id: str, attachment_payload: dict):
+        """
+        Sends an attachment to a user.
+        """
+        url = f"{self.base_url}/me/messages"
+        params = {"access_token": self.config.meta_page_access_token}
+        payload = {
+            "recipient": {"id": recipient_id},
+            "message": {"attachment": attachment_payload}
         }
 
         self._make_request("POST", url, params=params, json=payload)
