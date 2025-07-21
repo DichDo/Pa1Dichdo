@@ -5,9 +5,13 @@
 This module handles the logic for scheduling and sending campaign messages.
 """
 
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 import schedule
 import time
-from memory import get_user
+from utils.database import get_user
 from utils import send_facebook_reply
 from campaigns import ART_DROP_CAMPAIGN, FIRST_INTERACTION_FUNNEL, GENTLE_FOLLOW_UP
 

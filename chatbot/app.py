@@ -1,16 +1,34 @@
 # 🚀 AI SOCIAL BOT 🚀
 # /app.py
 
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 from flask import Flask, request
 from openai_response import generate_openai_reply
-from memory import get_user_memory, save_user_memory, get_latest_name
-from utils import extract_name_from_message, simulate_typing_delay, send_facebook_reply
+from memory import get_user_memory, save_user_memory, get_latest_name, init_db
+from utils.name_utils import extract_name_from_message
+from utils import send_facebook_reply, simulate_typing_delay
 from scheduler import schedule_campaigns
-import os
 import threading
+import csv
+from datetime import datetime
+
 
 app = Flask(__name__)
 VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")
+
+# Initialize the database
+init_db()
+
+def log_conversation(user_id, user_msg, bot_reply):
+    # Ensure the 'logs' directory exists
+    if not os.path.exists("chatbot/logs"):
+        os.makedirs("chatbot/logs")
+    with open("chatbot/logs/conversations.csv", mode='a', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        writer.writerow([datetime.now(), user_id, user_msg, bot_reply])
 
 @app.route("/webhook", methods=["GET", "POST"])
 def webhook():
@@ -47,6 +65,9 @@ def webhook():
 
                         # Save
                         save_user_memory(sender_id, user_message, reply, name)
+
+                        # Log conversation
+                        log_conversation(sender_id, user_message, reply)
 
                         # Send reply
                         send_facebook_reply(sender_id, reply)

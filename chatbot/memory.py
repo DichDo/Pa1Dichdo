@@ -1,7 +1,7 @@
 import sqlite3
 
 def connect():
-    return sqlite3.connect('memory.db')
+    return sqlite3.connect('chatbot/memory.db')
 
 def init_db():
     with connect() as conn:
